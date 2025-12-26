@@ -64,8 +64,8 @@ class Target(object):
     def type_analysis(self):
         if self.address is None:
             raise GreedException("Target without address has no attribute .type_analysis")
-        if self.project is None:
-            raise GreedException("Target without .project has no attribute .type_analysis")
+        # if self.project is None:
+        #     raise GreedException("Target without .project has no attribute .type_analysis")
         
         # _hash = hashlib.sha256(bytes.fromhex(self.project.code.decode().strip())).hexdigest()
         if self._type_analysis is None and not os.path.exists(f"{globals.DATA_PATH}/type/{self.address}.json"):

@@ -93,7 +93,7 @@ class AttackRequest(object):
         attack_request = AttackRequest(partial_init=True)
         attack_request.attack_type = AttackRequest.ATTACK_TYPE(j["attack_type"])
         attack_request.slot = j["slot"]
-        attack_request.target_block = j["target_block"]
+        attack_request.target_block = j.get("target_block", j.get("window", [0, 0])[1])
         attack_request.proxy_address = j["proxy_address"]
         attack_request.target1_address = j["target1_address"]
         attack_request.target1_pc = j["target1_pc"]

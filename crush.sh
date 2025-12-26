@@ -32,7 +32,11 @@ COLLISIONS_OUTPUT_FILE=${DATA_PATH}/collisions/${PROXY_ADDRESS}.json
 IMPACT_OUTPUT_FILE=${DATA_PATH}/impact/${PROXY_ADDRESS}.json
 
 # find known interactions
-timeout 300 $DIR/crush.py -D $DATA_PATH interactions $PROXY_ADDRESS -o $INTERACTIONS_OUTPUT_FILE
+if [ ! -f "$INTERACTIONS_OUTPUT_FILE" ]; then
+    timeout 300 $DIR/crush.py -D $DATA_PATH interactions $PROXY_ADDRESS -o $INTERACTIONS_OUTPUT_FILE
+else
+    echo "Interactions analysis already done. Skipping."
+fi
 
 # find possible target contracts
 KNOWN_INTERACTIONS=""
@@ -42,7 +46,11 @@ if [ -s $INTERACTIONS_OUTPUT_FILE ] && [ $(jq length $INTERACTIONS_OUTPUT_FILE) 
 fi
 
 # then study their lifespan
-timeout 1800 $DIR/crush.py -D $DATA_PATH lifespan $PROXY_ADDRESS $KNOWN_INTERACTIONS -o $LIFESPAN_OUTPUT_FILE
+if [ ! -f "$LIFESPAN_OUTPUT_FILE" ]; then
+    timeout 1800 $DIR/crush.py -D $DATA_PATH lifespan $PROXY_ADDRESS $KNOWN_INTERACTIONS -o $LIFESPAN_OUTPUT_FILE
+else
+    echo "Lifespan analysis already done. Skipping."
+fi
 
 if [ ! -s $LIFESPAN_OUTPUT_FILE ] || [ ! $(jq length $LIFESPAN_OUTPUT_FILE) -gt 0 ]; then
     echo "Empty lifespan analysis. Exiting."
@@ -53,14 +61,26 @@ fi
 ALL_UNIQUE_TARGET_ADDRESSES=$(jq -r '.[] | .address' $LIFESPAN_OUTPUT_FILE | sort -u | tr '\n' ' ')
 # ALL_UNIQUE_TARGET_ADDRESSES (includes PROXY_ADDRESS)
 for t in $ALL_UNIQUE_TARGET_ADDRESSES; do
-    timeout 1800 $DIR/crush.py -D $DATA_PATH type $t -o ${DATA_PATH}/type/$t.json
+    if [ ! -f "${DATA_PATH}/type/$t.json" ]; then
+        timeout 1800 $DIR/crush.py -D $DATA_PATH type $t -o ${DATA_PATH}/type/$t.json
+    else
+        echo "Type analysis for $t already done. Skipping."
+    fi
 done
 
 # find collisions
-timeout 1800 $DIR/crush.py -D $DATA_PATH collision $PROXY_ADDRESS -o $COLLISIONS_OUTPUT_FILE
+if [ ! -f "$COLLISIONS_OUTPUT_FILE" ]; then
+    timeout 1800 $DIR/crush.py -D $DATA_PATH collision $PROXY_ADDRESS -o $COLLISIONS_OUTPUT_FILE
+else
+    echo "Collision analysis already done. Skipping."
+fi
 
 # run impact analysis
-timeout 1800 $DIR/crush.py -D $DATA_PATH impact $PROXY_ADDRESS -o $IMPACT_OUTPUT_FILE
+if [ ! -f "$IMPACT_OUTPUT_FILE" ]; then
+    timeout 1800 $DIR/crush.py -D $DATA_PATH impact $PROXY_ADDRESS -o $IMPACT_OUTPUT_FILE
+else
+    echo "Impact analysis already done. Skipping."
+fi
 
 if [ ! -s $IMPACT_OUTPUT_FILE ] || [ ! $(jq length $IMPACT_OUTPUT_FILE) -gt 0 ]; then
     echo "Empty impact analysis. Exiting."
